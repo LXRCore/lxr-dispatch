@@ -1,0 +1,25 @@
+/* LXR-DISPATCH — the call stack on top of lxr-ui.css. No colours here: every value is a kit token. */
+.dp-stack { position: fixed; top: 120px; right: 40px; width: 360px; display: flex; flex-direction: column; gap: var(--lxr-s2); }
+.dp-stack.lxr-hidden { display: none; }
+.dp-head { display: flex; align-items: center; gap: var(--lxr-s2); font-size: var(--lxr-text-micro); padding: 0 var(--lxr-s2) var(--lxr-s1); }
+.dp-logo { width: 18px; height: 18px; object-fit: contain; opacity: .8; }
+.dp-card { background: var(--lxr-panel-solid); border-left: 2px solid var(--lxr-edge); border-radius: var(--lxr-radius); padding: var(--lxr-s3) var(--lxr-s4); display: flex; flex-direction: column; gap: 6px; }
+.dp-card.p1 { border-left-color: var(--lxr-blood-lit); }
+.dp-card.p2 { border-left-color: var(--lxr-bone-40); }
+.dp-card__top { display: flex; align-items: baseline; gap: var(--lxr-s2); font-family: var(--lxr-font-code); font-size: var(--lxr-text-micro); letter-spacing: var(--lxr-track-mono); text-transform: uppercase; color: var(--lxr-smoke); }
+.dp-card__code { color: var(--lxr-blood-lit); }
+.dp-card__age { margin-left: auto; }
+.dp-card__title { font-family: var(--lxr-font-cut); font-size: var(--lxr-text-lg); color: var(--lxr-bone); }
+.dp-card__msg { color: var(--lxr-ash); font-size: var(--lxr-text-sm); }
+.dp-card__foot { display: flex; align-items: center; gap: var(--lxr-s2); margin-top: 4px; }
+.dp-card__resp { font-family: var(--lxr-font-code); font-size: var(--lxr-text-micro); color: var(--lxr-smoke); letter-spacing: var(--lxr-track-mono); text-transform: uppercase; }
+.dp-card__foot .lxr-grow { flex: 1; }
+.dp-btn { padding: 5px 9px; background: transparent; border: var(--lxr-hairline) solid var(--lxr-edge); border-radius: var(--lxr-radius); color: var(--lxr-ash); font-family: var(--lxr-font-code); font-size: var(--lxr-text-micro); letter-spacing: var(--lxr-track-mono); text-transform: uppercase; cursor: pointer; pointer-events: auto; }
+.dp-btn:hover { color: var(--lxr-bone); border-color: var(--lxr-bone-40); }
+.dp-btn.is-on { border-color: var(--lxr-blood-lit); color: var(--lxr-bone); }
+.lxr.lang-ka .dp-card__title { font-family: var(--lxr-font-ka); }
+.lxr.lang-ka .dp-card__top, .lxr.lang-ka .dp-btn, .lxr.lang-ka .dp-card__resp { font-family: var(--lxr-font-ka); text-transform: none; letter-spacing: 0; }
+.dp-card__top > span { white-space: nowrap; }
+.dp-card__top { flex-wrap: nowrap; overflow: hidden; }
+.dp-card__top > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; }
+.dp-card__resp { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }

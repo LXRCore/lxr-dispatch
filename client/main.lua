@@ -1,76 +1,110 @@
---[[
-    ██╗     ██╗  ██╗██████╗        ██╗ ██████╗ ██████╗      █████╗ ██╗     ███████╗██████╗ ████████╗███████╗
-    ██║     ╚██╗██╔╝██╔══██╗      ██║██╔═══██╗██╔══██╗    ██╔══██╗██║     ██╔════╝██╔══██╗╚══██╔══╝██╔════╝
-    ██║      ╚███╔╝ ██████╔╝█████╗██║██║   ██║██████╔╝    ███████║██║     █████╗  ██████╔╝   ██║   ███████╗
-    ██║      ██╔██╗ ██╔══██╗╚════╝██║██║   ██║██╔══██╗    ██╔══██║██║     ██╔══╝  ██╔══██╗   ██║   ╚════██║
-    ███████╗██╔╝ ██╗██║  ██║      ██║╚██████╔╝██████╔╝    ██║  ██║███████╗███████╗██║  ██║   ██║   ███████║
-    ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝ ╚═════╝ ╚═════╝     ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
+--[[ ═══════════════════════════════════════════════════════════════════════════
+     LXR-DISPATCH — Client: cards, blips, routes, the shots reporter
+     ═══════════════════════════════════════════════════════════════════════════
+     © 2026 iBoss21 / LXRCore — All Rights Reserved
+     ═══════════════════════════════════════════════════════════════════════════ ]]
 
-    🐺 LXR Job Alerts — Client Main
+local LXRCore = exports['lxr-core']:GetCoreObject()
+local D = LXRDispatch
+local N = Citizen.InvokeNative
+local calls = {}        -- id → call (public shape)
+local blips = {}        -- id → { blip, radius }
+local shown = true
+local newest = nil
 
-    ═══════════════════════════════════════════════════════════════════════════════
-    SERVER INFORMATION
-    ═══════════════════════════════════════════════════════════════════════════════
+local function toast(title, desc, kind) if GetResourceState('lxr-nui') == 'started' then exports['lxr-nui']:Toast({ title = title, description = desc, type = kind or 'inform' }) else LXRCore.Notify(title, kind or 'inform') end end
 
-    Server:    The Land of Wolves 🐺
-    Developer: iBoss21 / The Lux Empire
-    Website:   https://www.wolves.land
-    Discord:   https://discord.gg/CrKcWdfd3A
-    Store:     https://theluxempire.tebex.io
+local function page(action, payload)
+    SendNUIMessage({ action = action, payload = payload, brand = LXRCore.Brand, lang = Config.Lang, locale = Lang.bundle(), shown = shown, respondKey = Config.Screen.respondKey })
+end
 
-    ═══════════════════════════════════════════════════════════════════════════════
+local function list()
+    local out = {}
+    for _, c in pairs(calls) do out[#out + 1] = c end
+    D.Sort(out)
+    while #out > Config.Screen.maxCards do table.remove(out) end
+    return out
+end
 
-    © 2026 iBoss21 / The Lux Empire | wolves.land | All Rights Reserved
-]]
-
--- ════════════════════════════════════════════════════════════════════════════════
--- 🐺 ALERT DISPLAY HANDLER
--- ════════════════════════════════════════════════════════════════════════════════
-
-RegisterNetEvent('lxr:alertplayer')
-AddEventHandler('lxr:alertplayer', function(msg, time, job, bliphash, x, y, z, shape, texturedir, radius, bliptime)
-
-    -- Send the notification via the active framework's notification system
-    if Config.Framework == 'lxr-core' then
-        TriggerEvent('lxr-core:NotifyLeft', job, msg, texturedir, shape, time)
-    elseif Config.Framework == 'rsg-core' then
-        TriggerEvent('rsg-core:NotifyLeft', job, msg, texturedir, shape, time)
-    elseif Config.Framework == 'qbr-core' then
-        TriggerEvent('qbr-core:NotifyLeft', job, msg, texturedir, shape, time)
-    elseif Config.Framework == 'qr-core' then
-        TriggerEvent('qr-core:NotifyLeft', job, msg, texturedir, shape, time)
-    elseif Config.Framework == 'vorp_core' then
-        TriggerEvent('vorp:TipRight', msg, time)
-    else
-        -- Standalone fallback
-        print('[lxr-jobalerts] Alert for ' .. tostring(job) .. ': ' .. tostring(msg))
+local function addBlip(call)
+    local b = call.blip
+    if not b then return end
+    local blip = N(0x554D9D53F696D002, 1664425300, call.coords.x, call.coords.y, call.coords.z)
+    if not blip or blip == 0 then return end
+    N(0x74F74D3207ED525C, blip, joaat(b.sprite or 'blip_ambient_sheriff'), true)
+    N(0x9CB1A1623062F402, blip, ('%s %s'):format(call.code or '', call.title or call.label))
+    if b.colour then N(0x662D364ABF16DE2F, blip, joaat(b.colour)) end
+    local radius
+    if b.radius then
+        radius = N(0x45F13B7E0A15C880, 1664425300, call.coords.x, call.coords.y, call.coords.z, b.radius + 0.0)
+        if radius and radius ~= 0 and b.colour then N(0x662D364ABF16DE2F, radius, joaat(b.colour)) end
     end
+    blips[call.id] = { blip = blip, radius = radius }
+end
 
-    if Config.Debug then
-        print('[lxr-jobalerts] Blip: shape=' .. tostring(shape) .. '  textureDict=' .. tostring(texturedir))
+local function removeBlip(id)
+    local e = blips[id]
+    if not e then return end
+    if e.blip then RemoveBlip(e.blip) end
+    if e.radius then RemoveBlip(e.radius) end
+    blips[id] = nil
+end
+
+local function route(call)
+    if not call then return end
+    SetNewWaypoint(call.coords.x, call.coords.y)
+    toast(Lang:t('info.routed', { code = call.code or '' }), call.title, 'inform')
+end
+
+RegisterNetEvent('lxr-dispatch:client:call', function(call)
+    calls[call.id] = call
+    newest = call.id
+    addBlip(call)
+    if call.sound then PlaySoundFrontend(call.sound, 'Ledger_Sounds', true, 0) end
+    if Config.Screen.toast then toast(('%s · %s'):format(call.code or '', call.title or call.label), call.message or call.town or '', 'warning') end
+    page('calls', list())
+end)
+RegisterNetEvent('lxr-dispatch:client:update', function(call) if calls[call.id] then calls[call.id] = call page('calls', list()) end end)
+RegisterNetEvent('lxr-dispatch:client:clear', function(id) calls[id] = nil removeBlip(id) if newest == id then newest = nil end page('calls', list()) end)
+RegisterNetEvent('lxr-dispatch:client:sync', function(mine)
+    for id in pairs(calls) do removeBlip(id) end
+    calls = {}
+    for _, c in ipairs(mine or {}) do calls[c.id] = c addBlip(c) end
+    page('calls', list())
+end)
+
+-- respond / route / close from the page or the key
+local function respond(id)
+    local call = calls[id]
+    if not call then return end
+    TriggerServerEvent('lxr-dispatch:server:respond', id)
+    if Config.Screen.routeOnRespond then route(call) end
+end
+RegisterNUICallback('respond', function(d, cb) respond(tonumber(d.id)) cb({}) end)
+RegisterNUICallback('route', function(d, cb) route(calls[tonumber(d.id)]) cb({}) end)
+RegisterNUICallback('close', function(d, cb) TriggerServerEvent('lxr-dispatch:server:clear', tonumber(d.id)) cb({}) end)
+
+RegisterCommand(Config.Screen.listCommand, function() shown = not shown page('calls', list()) end, false)
+RegisterCommand('dispatch_respond', function() if shown and newest and calls[newest] then respond(newest) end end, false)
+RegisterKeyMapping('dispatch_respond', 'Respond to the newest call', 'keyboard', Config.Screen.respondKey)
+
+-- shots in town: the client only says "I fired"; the server decides if it matters
+CreateThread(function()
+    while true do
+        Wait(0)
+        if Config.Auto.shots.enabled and LocalPlayer.state.isLoggedIn and IsPedShooting(PlayerPedId()) then
+            TriggerServerEvent('lxr-dispatch:server:shots')
+            Wait(Config.Auto.shots.cooldownMs)
+        else
+            Wait(250)
+        end
     end
-
-    -- Show the map blip at the caller's location
-    local blip = Citizen.InvokeNative(0x45f13b7e0a15c880, bliphash, x, y, z, radius)
-    Wait(bliptime)
-    RemoveBlip(blip)
 end)
 
--- ════════════════════════════════════════════════════════════════════════════════
--- 🐺 CHARACTER SELECT — REGISTER WITH ALERT GROUPS
--- ════════════════════════════════════════════════════════════════════════════════
+RegisterNetEvent('lxr:client:loaded', function() Wait(1000) TriggerServerEvent('lxr-dispatch:server:sync') end)
+AddEventHandler('onResourceStart', function(res) if res == GetCurrentResourceName() and LocalPlayer.state.isLoggedIn then TriggerServerEvent('lxr-dispatch:server:sync') end end)
+RegisterNetEvent('lxr:client:unloaded', function() for id in pairs(calls) do removeBlip(id) end calls = {} page('calls', {}) end)
+AddEventHandler('onResourceStop', function(res) if res == GetCurrentResourceName() then for id in pairs(calls) do removeBlip(id) end end end)
 
-RegisterNetEvent('vorp:SelectedCharacter')
-AddEventHandler('vorp:SelectedCharacter', function(charid)
-    Wait(1000)
-    TriggerServerEvent('bcc:alerts:register')
-end)
-
--- LXR-Core / RSG-Core character load hook
-AddEventHandler('lxr-core:Client:OnPlayerLoaded', function()
-    TriggerServerEvent('bcc:alerts:register')
-end)
-
-AddEventHandler('RSGCore:Client:OnPlayerLoaded', function()
-    TriggerServerEvent('bcc:alerts:register')
-end)
+exports('Open', list)
+exports('Respond', respond)
