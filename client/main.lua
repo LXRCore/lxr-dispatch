@@ -31,7 +31,7 @@ local function addBlip(call)
     if not b then return end
     local blip = N(0x554D9D53F696D002, 1664425300, call.coords.x, call.coords.y, call.coords.z)
     if not blip or blip == 0 then return end
-    N(0x74F74D3207ED525C, blip, joaat(b.sprite or 'blip_ambient_sheriff'), true)
+    N(0x74F74D3207ED525C, blip, joaat(b.sprite or 'blip_ambient_sheriff'), true) if GetResourceState('lxr-mapcolor') == 'started' then pcall(function() N(0x662D364ABF16DE2F, blip, exports['lxr-mapcolor']:modifier('law')) end) end
     N(0x9CB1A1623062F402, blip, ('%s %s'):format(call.code or '', call.title or call.label))
     if b.colour then N(0x662D364ABF16DE2F, blip, joaat(b.colour)) end
     local radius
