@@ -19,7 +19,7 @@
     Product:     wolves.land / The Land of Wolves
     Developer:   iBoss21 / LXRCore
     Website:     https://www.lxrcore.com
-    Discord:     https://discord.gg/ZHMKVYyhBa (development)
+    Discord:     https://discord.gg/GAhk8cgXe9
     GitHub:      https://github.com/LXRCore
 
     Version: 3.0.0
