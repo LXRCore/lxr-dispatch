@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.1 — 2026-09-19
+* Route to a call draws a GPS route on the map (`START_GPS_MULTI_ROUTE`), cleared within 25 m of the call or when it is closed — `SetNewWaypoint` is GTA V only and was a nil call.
+
 ## 3.0.0 — 2026-09-18
 
 Rebuilt on the LXRCore v3 native API (repository renamed from lxr-jobalerts). Nothing of the earlier build remains.

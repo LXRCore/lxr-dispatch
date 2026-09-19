@@ -25,7 +25,7 @@ lua54 'yes'
 name 'lxr-dispatch'
 author 'iBoss21 / LXRCore'
 description 'LXRCore v3 dispatch: calls raised by anything, handed to the trades on duty as cards, blips and routes; ten-codes, responders, expiry, citizen wires'
-version '3.0.0'
+version '3.0.1'
 repository 'https://github.com/LXRCore/lxr-dispatch'
 
 shared_scripts {

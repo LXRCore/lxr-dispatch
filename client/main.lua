@@ -50,10 +50,23 @@ local function removeBlip(id)
     blips[id] = nil
 end
 
+-- the route: RDR3 has no SetNewWaypoint — a GPS multi-route is drawn to the call and cleared on arrival / next route
+local routed = nil
+local function clearRoute() if routed then N(0x9E0AB9AAEE87CE28) N(0x4426D65E029A4DC0, false) routed = nil end end   -- CLEAR_GPS_MULTI_ROUTE
 local function route(call)
     if not call then return end
-    SetNewWaypoint(call.coords.x, call.coords.y)
+    clearRoute()
+    N(0x3D3D15AF7BCAAF83, joaat('COLOR_RED'), true, true)                                     -- START_GPS_MULTI_ROUTE(colour, onFoot, inVehicle)
+    N(0x64C59DD6834FA942, call.coords.x, call.coords.y, call.coords.z, true)                  -- ADD_POINT_TO_GPS_MULTI_ROUTE
+    N(0x4426D65E029A4DC0, true)                                                              -- SET_GPS_MULTI_ROUTE_RENDER
+    routed = call.id
     toast(Lang:t('info.routed', { code = call.code or '' }), call.title, 'inform')
+    CreateThread(function()
+        while routed == call.id do
+            Wait(2000)
+            if #(GetEntityCoords(PlayerPedId()) - call.coords) < 25.0 or not calls[call.id] then clearRoute() end
+        end
+    end)
 end
 
 RegisterNetEvent('lxr-dispatch:client:call', function(call)
