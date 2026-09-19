@@ -29,6 +29,7 @@ version '3.0.0'
 repository 'https://github.com/LXRCore/lxr-dispatch'
 
 shared_scripts {
+    '@lxr-core/shared/import.lua',   -- LXRShared: the catalog, jobs, gangs, weapons, horses, prices
     'shared/locale.lua',
     'locales/*.lua',
     'config.lua',
