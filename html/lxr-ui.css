@@ -182,6 +182,8 @@
      What a floating panel sits on over the game frame. */
   --lxr-panel-bg: linear-gradient(90deg, rgba(5, 5, 6, 0.85), rgba(5, 5, 6, 0.6));
   --lxr-panel-solid: rgba(5, 5, 6, 0.75);
+  --lxr-glass: rgba(14, 14, 17, 0.55); /* a see-through sheet over the scene (no backdrop-filter: the game paints a black plate) */
+  --lxr-glass-well: rgba(244, 242, 238, 0.04); /* an input well on the glass sheet */
 }
 
 /* ==========================================================================
